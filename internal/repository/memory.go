@@ -18,7 +18,7 @@ func (m *MemoryRepository) Get(short string) string {
 
 // Добавить короткую часть и оригинальный URL.
 func (m *MemoryRepository) Put(short string, orig string) error {
-	if _, ok := m.db[short]; ok == true {
+	if _, ok := m.db[short]; ok {
 		return errors.New("ключ уже существует")
 	}
 	m.db[short] = orig
