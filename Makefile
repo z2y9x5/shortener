@@ -1,7 +1,6 @@
 COMPILER=go1.24.13
 SHORTENER_PATH=./cmd/shortener
 SHORTENER_BIN=shortener
-INCREMENT=2
 
 help:
 	@echo "Доступные команды:"
@@ -9,9 +8,6 @@ help:
 	@echo "        Удаление сгенерированных файлов."
 	@echo "    make test"
 	@echo "        Тестирование приложения."
-	@echo "    make autotest"
-	@echo "        Запуск автотестов."
-	@echo "        Номер инкремента указывается в переменной INCREMENT"
 	@echo "    make run"
 	@echo "        Запуск приложения."
 	@echo "    make build"
@@ -29,10 +25,6 @@ test:
 	$(COMPILER) test -v -count 1 ./...
 	@echo "Покрытие тестами:"
 	$(COMPILER) test -count 1 -cover ./...
-
-autotest: build
-	@echo "Запуск автотестов:"
-	./shortenertest -test.v -test.run=^TestIteration$(INCREMENT)$$ -binary-path=$(SHORTENER_PATH)/$(SHORTENER_BIN)
 
 run: clean test
 	$(COMPILER) run $(SHORTENER_PATH)/main.go
