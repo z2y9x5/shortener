@@ -13,16 +13,13 @@ type MemoryRepository struct {
 
 // Получить оригинальный URL по короткой части.
 func (m *MemoryRepository) Get(short string) string {
-	if v, ok := m.db[short]; ok == true {
-		return v
-	}
-	return ""
+	return m.db[short]
 }
 
 // Добавить короткую часть и оригинальный URL.
 func (m *MemoryRepository) Put(short string, orig string) error {
 	if _, ok := m.db[short]; ok == true {
-		return errors.New("Ключ уже существует")
+		return errors.New("ключ уже существует")
 	}
 	m.db[short] = orig
 	return nil

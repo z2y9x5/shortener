@@ -46,7 +46,7 @@ func GetShortURLPart(orig string) (string, error) {
 			return short, nil
 		}
 	}
-	return "", errors.New("Попытки сгенерировать короткую часть исчерпаны")
+	return "", errors.New("попытки сгенерировать короткую часть исчерпаны")
 }
 
 // Получить оригинальный URL по короткой части.
