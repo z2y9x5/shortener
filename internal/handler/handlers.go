@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/z2y9x5/shortener/internal/service"
+
+	"github.com/go-chi/chi"
 )
 
 // Протокол по умолчанию.
@@ -43,7 +45,10 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 // Эндпоинт с методом GET и путём /{id}, где id — идентификатор сокращённого URL.
 // Cервер возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.
 func RootWithShortHandler(w http.ResponseWriter, r *http.Request) {
-	shortPart := r.PathValue("id")
+	// Инкремент 3. Метод сторонней библиотеки chi.
+	shortPart := chi.URLParam(r, "id")
+	// Инкремент 2. Метод стандартной библиотеки net/http.
+	// shortPart := r.PathValue("id")
 	originalURL := service.GetOriginalURL(shortPart)
 	if originalURL == "" {
 		http.Error(w, "The requested URL was not found", http.StatusBadRequest)
