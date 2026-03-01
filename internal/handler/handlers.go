@@ -25,7 +25,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	body, err := io.ReadAll(r.Body)
-	if err != nil {
+	if err != nil || len(body) == 0 {
 		http.Error(w, "Error reading request body", http.StatusBadRequest)
 		return
 	}
