@@ -16,19 +16,36 @@ const (
 	shortPartMaxAttempts = 10
 )
 
-var (
-	// Хранилище URL.
-	repo URLRepository = repository.NewMemoryRepository()
-)
+// Интерфейс сервиса коротких url.
+type Shortener interface {
+	GetOriginalURL(shortPart string) string
+	GetShortURLPart(orig string) (string, error)
+}
 
-// Интерфейс репозитория URL.
-type URLRepository interface {
-	Get(short string) string             // Получить оригинальный URL по короткой части.
-	Put(short string, orig string) error // Добавить короткую часть и оригинальный URL.
+// Сервис укорачивания url.
+type shortener struct {
+	// Хранилище URL.
+	repo repository.Repository
+}
+
+// Получить оригинальный URL по короткой части.
+func (s *shortener) GetOriginalURL(shortPart string) string {
+	return s.repo.Get(shortPart)
+}
+
+// Получить короткую часть URL.
+func (s *shortener) GetShortURLPart(orig string) (string, error) {
+	for range shortPartMaxAttempts {
+		short := s.generateShortPart()
+		if err := s.repo.Put(short, orig); err == nil {
+			return short, nil
+		}
+	}
+	return "", errors.New("попытки сгенерировать короткую часть исчерпаны")
 }
 
 // Сгенерировать короткую часть.
-func generateShortPart() string {
+func (s *shortener) generateShortPart() string {
 	var short [shortPartLength]rune
 	sym := []rune(symbols)
 	for i := range shortPartLength {
@@ -38,18 +55,9 @@ func generateShortPart() string {
 	return string(short[:])
 }
 
-// Получить короткую часть URL.
-func GetShortURLPart(orig string) (string, error) {
-	for range shortPartMaxAttempts {
-		short := generateShortPart()
-		if err := repo.Put(short, orig); err == nil {
-			return short, nil
-		}
+// Конструктор сервиса коротких url.
+func NewShortener(r repository.Repository) Shortener {
+	return &shortener{
+		repo: r,
 	}
-	return "", errors.New("попытки сгенерировать короткую часть исчерпаны")
-}
-
-// Получить оригинальный URL по короткой части.
-func GetOriginalURL(shortPart string) string {
-	return repo.Get(shortPart)
 }

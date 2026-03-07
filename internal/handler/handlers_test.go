@@ -9,9 +9,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/z2y9x5/shortener/internal/config"
+	"github.com/z2y9x5/shortener/internal/repository"
+	"github.com/z2y9x5/shortener/internal/service"
 )
 
 func TestRootHandler(t *testing.T) {
+	cnf := config.NewConfig()
+	cnf.ApplyCLIArgs()
+	cnfApp := cnf.GetAppConfig()
+
+	db := repository.NewMemoryRepository()
+	shortener := service.NewShortener(db)
+	handlers := NewHandlers(cnfApp.BaseURL, shortener)
+
 	type want struct {
 		requestContentType  string
 		requestBody         string
@@ -30,7 +41,7 @@ func TestRootHandler(t *testing.T) {
 				requestBody:         "https://ya.ru/",
 				responseCode:        201,
 				responseContentType: "text/plain",
-				responseBody:        "http://localhost:80/",
+				responseBody:        cnfApp.BaseURL,
 			},
 		},
 		{
@@ -58,10 +69,10 @@ func TestRootHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			reqBody := strings.NewReader(test.want.requestBody)
 			r := httptest.NewRequest(http.MethodPost, "/", reqBody)
-			r.Host = "localhost:80"
+			r.Host = cnfApp.BaseURL
 			r.Header.Set("Content-Type", test.want.requestContentType)
 			w := httptest.NewRecorder()
-			RootHandler(w, r)
+			handlers.RootHandler(w, r)
 			res := w.Result()
 
 			assert.Equal(t, test.want.responseCode, res.StatusCode)
