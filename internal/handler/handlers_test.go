@@ -16,9 +16,7 @@ import (
 
 func TestRootHandler(t *testing.T) {
 	cnf := config.NewConfig()
-	cnf.ApplyCLIArgs()
 	cnfApp := cnf.GetAppConfig()
-
 	db := repository.NewMemoryRepository()
 	shortener := service.NewShortener(db)
 	handlers := NewHandlers(cnfApp.BaseURL, shortener)

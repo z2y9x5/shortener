@@ -37,7 +37,16 @@ func (c *config) ApplyCLIArgs() {
 	flag.StringVar(&c.App.ServerAddr, "a", defaultServerAddr, "Адрес сервера в формате хост:порт. Пример: "+defaultServerAddr)
 	flag.StringVar(&c.App.BaseURL, "b", defaultBaseURL, "Базовый URL для ссылок. Пример: "+defaultBaseURL)
 	flag.Parse()
-	deleteLastSlash(&c.App.BaseURL)
+	c.deleteLastSlash(&c.App.BaseURL)
+}
+
+// Удалить слеш в конце строки.
+func (c *config) deleteLastSlash(url *string) {
+	runes := []rune(*url)
+	len := len(runes)
+	if len > 0 && runes[len-1] == '/' {
+		*url = string(runes[:len-1])
+	}
 }
 
 // Конструктор конфигурации.
@@ -47,14 +56,5 @@ func NewConfig() Config {
 			ServerAddr: defaultServerAddr,
 			BaseURL:    defaultBaseURL,
 		},
-	}
-}
-
-// Удалить слеш в конце строки.
-func deleteLastSlash(url *string) {
-	runes := []rune(*url)
-	len := len(runes)
-	if len > 0 && runes[len-1] == '/' {
-		*url = string(runes[:len-1])
 	}
 }
