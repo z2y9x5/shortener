@@ -15,6 +15,7 @@ import (
 func main() {
 	cnf := config.NewConfig()
 	cnf.ApplyCLIArgs()
+	cnf.ApplyEnvArgs()
 	cnfApp := cnf.GetAppConfig()
 
 	db := repository.NewMemoryRepository()

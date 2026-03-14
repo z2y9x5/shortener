@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"os"
 )
 
 // Значения по умолчанию.
@@ -14,6 +15,7 @@ const (
 type Config interface {
 	GetAppConfig() app
 	ApplyCLIArgs()
+	ApplyEnvArgs()
 }
 
 // Конфигурация приложения.
@@ -38,6 +40,16 @@ func (c *config) ApplyCLIArgs() {
 	flag.StringVar(&c.App.BaseURL, "b", defaultBaseURL, "Базовый URL для ссылок. Пример: "+defaultBaseURL)
 	flag.Parse()
 	c.deleteLastSlash(&c.App.BaseURL)
+}
+
+// Применить значения из переменных окружения.
+func (c *config) ApplyEnvArgs() {
+	if val := os.Getenv("SERVER_ADDRESS"); val != "" {
+		c.App.ServerAddr = val
+	}
+	if val := os.Getenv("BASE_URL"); val != "" {
+		c.App.BaseURL = val
+	}
 }
 
 // Удалить слеш в конце строки.
