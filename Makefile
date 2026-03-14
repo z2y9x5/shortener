@@ -1,4 +1,4 @@
-COMPILER=go1.24.13
+COMPILER=
 SHORTENER_PATH=./cmd/shortener
 SHORTENER_BIN=shortener
 
