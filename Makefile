@@ -1,4 +1,4 @@
-COMPILER=
+COMPILER=go
 SHORTENER_PATH=./cmd/shortener
 SHORTENER_BIN=shortener
 
@@ -15,6 +15,7 @@ help:
 
 clean:
 	rm -f $(SHORTENER_PATH)/$(SHORTENER_BIN)
+	rm -f coverage.out
 
 test:
 	@echo "Форматирование кода:"
@@ -24,7 +25,8 @@ test:
 	@echo "Тесты приложения:"
 	$(COMPILER) test -v -count 1 ./...
 	@echo "Покрытие тестами:"
-	$(COMPILER) test -count 1 -cover ./...
+	$(COMPILER) test -coverprofile=coverage.out ./...
+	$(COMPILER) tool cover -func=coverage.out
 
 run: clean test
 	$(COMPILER) run $(SHORTENER_PATH)/main.go
