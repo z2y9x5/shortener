@@ -5,30 +5,22 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/z2y9x5/shortener/internal/service"
-
 	"github.com/go-chi/chi"
 )
 
-// Интерфейс эндпоинтов.
-type Handlers interface {
-	DefaultHandler(w http.ResponseWriter, r *http.Request)
-	RootHandler(w http.ResponseWriter, r *http.Request)
-	RootWithShortHandler(w http.ResponseWriter, r *http.Request)
+// Shortener - интерфейс сервиса коротких URL.
+type Shortener interface {
+	GetOriginalURL(shortPart string) string
+	GetShortURLPart(orig string) (string, error)
 }
 
-// Эндпоинты.
+// handlers - эндпоинты сервера.
 type handlers struct {
+	shortener Shortener
 	baseURL   string
-	shortener service.Shortener
 }
 
-// Эндпоинт по умолчанию.
-func (h handlers) DefaultHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Bad Request", http.StatusBadRequest)
-}
-
-// Эндпоинт с методом POST и путём /.
+// RootHandler - эндпоинт с методом POST и путём /.
 // Сервер принимает в теле запроса строку URL как text/plain.
 // Возвращает ответ с кодом 201 и сокращённым URL как text/plain.
 func (h handlers) RootHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +44,7 @@ func (h handlers) RootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(resp))
 }
 
-// Эндпоинт с методом GET и путём /{id}, где id — идентификатор сокращённого URL.
+// RootWithShortHandler - эндпоинт с методом GET и путём /{id}, где id — идентификатор сокращённого URL.
 // Cервер возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.
 func (h handlers) RootWithShortHandler(w http.ResponseWriter, r *http.Request) {
 	shortPart := chi.URLParam(r, "id")
@@ -64,10 +56,10 @@ func (h handlers) RootWithShortHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-// Конструктор эндпоинтов.
-func NewHandlers(url string, service service.Shortener) Handlers {
+// NewHandlers конструктор для [handlers].
+func NewHandlers(url string, service Shortener) *handlers {
 	return &handlers{
-		baseURL:   url,
 		shortener: service,
+		baseURL:   url,
 	}
 }

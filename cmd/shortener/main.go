@@ -1,30 +1,37 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/z2y9x5/shortener/internal/config"
 	"github.com/z2y9x5/shortener/internal/handler"
+	"github.com/z2y9x5/shortener/internal/logger"
 	"github.com/z2y9x5/shortener/internal/repository"
 	"github.com/z2y9x5/shortener/internal/service"
 
 	"github.com/go-chi/chi"
+	"go.uber.org/zap"
 )
 
 func main() {
-	cnf := config.NewConfig()
+	log, err := logger.Initialize("info")
+	if err != nil {
+		panic(err)
+	}
+
+	cnf := config.GetConfig()
 	cnf.ApplyCLIArgs()
 	cnf.ApplyEnvArgs()
-	cnfApp := cnf.GetAppConfig()
 
 	db := repository.NewMemoryRepository()
 	shortener := service.NewShortener(db)
-	handlers := handler.NewHandlers(cnfApp.BaseURL, shortener)
+	handlers := handler.NewHandlers(cnf.BaseURL, shortener)
 
 	mux := chi.NewRouter()
-	mux.Post("/", handlers.RootHandler)
-	mux.Get("/{id}", handlers.RootWithShortHandler)
+	mux.Post("/", logger.RequestLogger(handlers.RootHandler))
+	mux.Get("/{id}", logger.RequestLogger(handlers.RootWithShortHandler))
 
-	log.Fatal(http.ListenAndServe(cnfApp.ServerAddr, mux))
+	if err := http.ListenAndServe(cnf.ServerAddr, mux); err != nil {
+		log.Panic("error in ListenAndServe", zap.Error(err))
+	}
 }
