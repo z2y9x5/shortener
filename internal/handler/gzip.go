@@ -33,6 +33,8 @@ func (c *compressWriter) Write(p []byte) (int, error) {
 func (c *compressWriter) WriteHeader(statusCode int) {
 	if !isCompressibleType(c.w.Header().Get("Content-Type")) {
 		c.w.Header().Del("Content-Encoding")
+		c.w.WriteHeader(statusCode)
+		return
 	}
 	c.w.Header().Set("Content-Encoding", "gzip")
 	c.w.WriteHeader(statusCode)
