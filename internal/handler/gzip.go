@@ -20,11 +20,11 @@ func (c *compressWriter) Header() http.Header {
 }
 
 // Write - обертка для [http.ResponseWriter.Write].
-// Использует gzip для "application/json" и "text/html".
+// Использует gzip для "application/json" и "text/plain".
 func (c *compressWriter) Write(p []byte) (int, error) {
 	contentType := c.w.Header().Get("Content-Type")
 	if strings.HasPrefix(contentType, "application/json") ||
-		strings.HasPrefix(contentType, "text/html") {
+		strings.HasPrefix(contentType, "text/plain") {
 		return c.zw.Write(p)
 	}
 	c.w.Header().Del("Content-Encoding")
@@ -32,11 +32,11 @@ func (c *compressWriter) Write(p []byte) (int, error) {
 }
 
 // WriteHeader - обертка для [http.ResponseWriter.WriteHeader].
-// Использует gzip для "application/json" и "text/html".
+// Использует gzip для "application/json" и "text/plain".
 func (c *compressWriter) WriteHeader(statusCode int) {
 	contentType := c.w.Header().Get("Content-Type")
 	if !(strings.HasPrefix(contentType, "application/json") ||
-		strings.HasPrefix(contentType, "text/html")) {
+		strings.HasPrefix(contentType, "text/plain")) {
 		c.w.Header().Del("Content-Encoding")
 	}
 	c.w.WriteHeader(statusCode)
