@@ -28,17 +28,17 @@ type handlers struct {
 // Возвращает ответ с кодом 201 и сокращённым URL как text/plain.
 func (h handlers) RootHandler(w http.ResponseWriter, r *http.Request) {
 	if !(strings.HasPrefix(r.Header.Get("Content-Type"), "text/plain")) {
-		http.Error(w, "Content-Type must be text/plain", http.StatusBadRequest)
+		http.Error(w, "content-type must be text/plain", http.StatusBadRequest)
 		return
 	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil || len(body) == 0 {
-		http.Error(w, "Error reading request body", http.StatusBadRequest)
+		http.Error(w, "error reading request body", http.StatusBadRequest)
 		return
 	}
 	shortURLPart, err := h.shortener.GetShortURLPart(string(body))
 	if err != nil {
-		http.Error(w, "Failed to create short URL", http.StatusBadRequest)
+		http.Error(w, "failed to create short url", http.StatusBadRequest)
 		return
 	}
 	resp := h.baseURL + "/" + shortURLPart
@@ -53,33 +53,33 @@ func (h handlers) RootWithShortHandler(w http.ResponseWriter, r *http.Request) {
 	shortPart := chi.URLParam(r, "id")
 	originalURL := h.shortener.GetOriginalURL(shortPart)
 	if originalURL == "" {
-		http.Error(w, "The requested URL was not found", http.StatusBadRequest)
+		http.Error(w, "the requested url was not found", http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Location", originalURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-// ShortenHandler принимает в теле запроса JSON-объект [model.JSONRequest],
+// ShortenHandler принимает в теле запроса JSON-объект [model.JSONRequest]
 // и возвращает в ответ объект [model.JSONResponse].
 func (h handlers) ShortenHandler(w http.ResponseWriter, r *http.Request) {
 	if !(strings.HasPrefix(r.Header.Get("Content-Type"), "application/json")) {
-		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
+		http.Error(w, "content-type must be application/json", http.StatusBadRequest)
 		return
 	}
 	var jsonReq model.JSONRequest
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&jsonReq); err != nil {
-		http.Error(w, "Cannot decode request JSON body", http.StatusBadRequest)
+		http.Error(w, "cannot decode request json body", http.StatusBadRequest)
 		return
 	}
 	if jsonReq.URL == "" {
-		http.Error(w, "URL in JSON is empty", http.StatusBadRequest)
+		http.Error(w, "url in json is empty", http.StatusBadRequest)
 		return
 	}
 	shortURLPart, err := h.shortener.GetShortURLPart(jsonReq.URL)
 	if err != nil {
-		http.Error(w, "Failed to create short URL", http.StatusBadRequest)
+		http.Error(w, "failed to create short url", http.StatusBadRequest)
 		return
 	}
 	resp := model.JSONResponse{
@@ -89,7 +89,7 @@ func (h handlers) ShortenHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(resp); err != nil {
-		http.Error(w, "Error encoding response", http.StatusBadRequest)
+		http.Error(w, "error encoding response", http.StatusBadRequest)
 		return
 	}
 }

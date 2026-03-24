@@ -39,11 +39,12 @@ func Initialize(level string) (*zap.Logger, error) {
 	return Log, nil
 }
 
-// RequestLogger - middleware-логер входящих запросов.
+// LoggerMiddleware - middleware-логер входящих запросов.
 // Логирует URI запроса, метод запроса, код статуса ответа,
 // размер содержимого ответа, время выполнения.
-func RequestLogger(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func LoggerMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer Log.Sync()
 		start := time.Now()
 
 		responseData := &responseData{}
@@ -62,5 +63,5 @@ func RequestLogger(h http.HandlerFunc) http.HandlerFunc {
 			zap.Int("size", responseData.size),
 			zap.Duration("duration", duration),
 		)
-	}
+	})
 }

@@ -18,6 +18,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer log.Sync()
 
 	cnf := config.GetConfig()
 	cnf.ApplyCLIArgs()
@@ -28,9 +29,11 @@ func main() {
 	handlers := handler.NewHandlers(cnf.BaseURL, shortener)
 
 	mux := chi.NewRouter()
-	mux.Post("/", logger.RequestLogger(handlers.RootHandler))
-	mux.Get("/{id}", logger.RequestLogger(handlers.RootWithShortHandler))
-	mux.Post("/api/shorten", logger.RequestLogger(handlers.ShortenHandler))
+	mux.Use(logger.LoggerMiddleware)
+	mux.Use(handler.GzipMiddleware)
+	mux.Post("/", handlers.RootHandler)
+	mux.Get("/{id}", handlers.RootWithShortHandler)
+	mux.Post("/api/shorten", handlers.ShortenHandler)
 
 	if err := http.ListenAndServe(cnf.ServerAddr, mux); err != nil {
 		log.Panic("error in ListenAndServe", zap.Error(err))
