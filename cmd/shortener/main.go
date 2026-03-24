@@ -30,6 +30,7 @@ func main() {
 	mux := chi.NewRouter()
 	mux.Post("/", logger.RequestLogger(handlers.RootHandler))
 	mux.Get("/{id}", logger.RequestLogger(handlers.RootWithShortHandler))
+	mux.Post("/api/shorten", logger.RequestLogger(handlers.ShortenHandler))
 
 	if err := http.ListenAndServe(cnf.ServerAddr, mux); err != nil {
 		log.Panic("error in ListenAndServe", zap.Error(err))
