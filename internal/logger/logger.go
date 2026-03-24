@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bytes"
 	"net/http"
 	"time"
 
@@ -15,6 +16,7 @@ var Log *zap.Logger = zap.NewNop()
 type responseData struct {
 	status int
 	size   int
+	body   *bytes.Buffer
 }
 
 // loggingResponseWriter подменяет исходный [http.ResponseWriter] в [RequestLogger].
@@ -30,6 +32,7 @@ func (l *loggingResponseWriter) Header() http.Header {
 
 // Write - обертка для [http.ResponseWriter.Write].
 func (l *loggingResponseWriter) Write(p []byte) (int, error) {
+	l.respData.body.Write(p)
 	count, err := l.w.Write(p)
 	l.respData.size = count
 	return count, err
@@ -65,7 +68,9 @@ func LoggerMiddleware(h http.Handler) http.Handler {
 		defer Log.Sync()
 		start := time.Now()
 
-		responseData := &responseData{}
+		responseData := &responseData{
+			body: &bytes.Buffer{},
+		}
 		lw := loggingResponseWriter{
 			w:        w,
 			respData: responseData,
@@ -79,6 +84,7 @@ func LoggerMiddleware(h http.Handler) http.Handler {
 			zap.String("method", r.Method),
 			zap.Int("status", responseData.status),
 			zap.Int("size", responseData.size),
+			zap.String("body", responseData.body.String()),
 			zap.Duration("duration", duration),
 		)
 	})
