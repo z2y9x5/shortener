@@ -19,8 +19,26 @@ type responseData struct {
 
 // loggingResponseWriter подменяет исходный [http.ResponseWriter] в [RequestLogger].
 type loggingResponseWriter struct {
-	http.ResponseWriter
-	responseData *responseData
+	w        http.ResponseWriter
+	respData *responseData
+}
+
+// Header - обертка для [http.ResponseWriter.Header].
+func (l *loggingResponseWriter) Header() http.Header {
+	return l.w.Header()
+}
+
+// Write - обертка для [http.ResponseWriter.Write].
+func (l *loggingResponseWriter) Write(p []byte) (int, error) {
+	count, err := l.w.Write(p)
+	l.respData.size = count
+	return count, err
+}
+
+// WriteHeader - обертка для [http.ResponseWriter.WriteHeader].
+func (l *loggingResponseWriter) WriteHeader(statusCode int) {
+	l.respData.status = statusCode
+	l.w.WriteHeader(statusCode)
 }
 
 // Initialize принимает уровень логирования в виде строки.
@@ -49,8 +67,8 @@ func LoggerMiddleware(h http.Handler) http.Handler {
 
 		responseData := &responseData{}
 		lw := loggingResponseWriter{
-			ResponseWriter: w,
-			responseData:   responseData,
+			w:        w,
+			respData: responseData,
 		}
 		h.ServeHTTP(&lw, r)
 

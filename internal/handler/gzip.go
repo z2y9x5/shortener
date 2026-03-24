@@ -20,11 +20,8 @@ func (c *compressWriter) Header() http.Header {
 }
 
 // Write - обертка для [http.ResponseWriter.Write].
-// Использует gzip для "application/json" и "text/plain".
 func (c *compressWriter) Write(p []byte) (int, error) {
-	contentType := c.w.Header().Get("Content-Type")
-	if strings.HasPrefix(contentType, "application/json") ||
-		strings.HasPrefix(contentType, "text/plain") {
+	if isCompressibleType(c.w.Header().Get("Content-Type")) {
 		return c.zw.Write(p)
 	}
 	c.w.Header().Del("Content-Encoding")
@@ -32,11 +29,8 @@ func (c *compressWriter) Write(p []byte) (int, error) {
 }
 
 // WriteHeader - обертка для [http.ResponseWriter.WriteHeader].
-// Использует gzip для "application/json" и "text/plain".
 func (c *compressWriter) WriteHeader(statusCode int) {
-	contentType := c.w.Header().Get("Content-Type")
-	if !(strings.HasPrefix(contentType, "application/json") ||
-		strings.HasPrefix(contentType, "text/plain")) {
+	if !isCompressibleType(c.w.Header().Get("Content-Type")) {
 		c.w.Header().Del("Content-Encoding")
 	}
 	c.w.WriteHeader(statusCode)
@@ -44,7 +38,10 @@ func (c *compressWriter) WriteHeader(statusCode int) {
 
 // Close закрывает [gzip.Writer] и досылает все данные из буфера.
 func (c *compressWriter) Close() error {
-	return c.zw.Close()
+	if isCompressibleType(c.w.Header().Get("Content-Type")) {
+		return c.zw.Close()
+	}
+	return nil
 }
 
 // newCompressWriter - конструктор для [compressWriter].
@@ -85,6 +82,17 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 		r:  r,
 		zr: zr,
 	}, nil
+}
+
+// isCompressibleType проверяет "Content-Type".
+// Сжимаемые типы: "application/json", "text/html".
+func isCompressibleType(contentType string) bool {
+	switch contentType {
+	case "application/json", "text/html":
+		return true
+	default:
+		return false
+	}
 }
 
 // GzipMiddleware поддерживает сжатые запросы с заголовком "Content-Encoding: gzip"
