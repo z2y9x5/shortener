@@ -22,6 +22,7 @@ func (c *compressWriter) Header() http.Header {
 // Write - обертка для [http.ResponseWriter.Write].
 func (c *compressWriter) Write(p []byte) (int, error) {
 	if isCompressibleType(c.w.Header().Get("Content-Type")) {
+		c.w.Header().Set("Content-Encoding", "gzip")
 		return c.zw.Write(p)
 	}
 	c.w.Header().Del("Content-Encoding")
@@ -33,6 +34,7 @@ func (c *compressWriter) WriteHeader(statusCode int) {
 	if !isCompressibleType(c.w.Header().Get("Content-Type")) {
 		c.w.Header().Del("Content-Encoding")
 	}
+	c.w.Header().Set("Content-Encoding", "gzip")
 	c.w.WriteHeader(statusCode)
 }
 
