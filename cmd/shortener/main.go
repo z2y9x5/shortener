@@ -30,7 +30,7 @@ func main() {
 
 	mux := chi.NewRouter()
 	mux.Use(logger.LoggerMiddleware)
-	mux.Use(handler.GzipMiddleware)
+	// mux.Use(handler.GzipMiddleware)
 	mux.Post("/", handlers.RootHandler)
 	mux.Get("/{id}", handlers.RootWithShortHandler)
 	mux.Post("/api/shorten", handlers.ShortenHandler)
