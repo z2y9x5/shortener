@@ -3,8 +3,6 @@ package service
 import (
 	"errors"
 	"math/rand"
-
-	"github.com/z2y9x5/shortener/internal/repository"
 )
 
 const (
@@ -16,24 +14,25 @@ const (
 	shortPartMaxAttempts = 10
 )
 
-// Интерфейс сервиса коротких url.
-type Shortener interface {
-	GetOriginalURL(shortPart string) string
-	GetShortURLPart(orig string) (string, error)
+// Repository - интерфейс хранилища данных.
+type Repository interface {
+	Get(short string) string
+	Put(short string, orig string) error
 }
 
-// Сервис укорачивания url.
+// shortener - сервис укорачивания url.
 type shortener struct {
-	// Хранилище URL.
-	repo repository.Repository
+	repo Repository
 }
 
-// Получить оригинальный URL по короткой части.
+// GetOriginalURL возвращает оригинальный URL по короткой части.
 func (s *shortener) GetOriginalURL(shortPart string) string {
 	return s.repo.Get(shortPart)
 }
 
-// Получить короткую часть URL.
+// GetShortURLPart генерирует короткую ссылку и помещает ее в хранилище.
+// Количество попыток сгенерировать уникальную ссылку задается в [shortPartMaxAttempts].
+// В случае неудачи возвращает пустую строку и ошибку.
 func (s *shortener) GetShortURLPart(orig string) (string, error) {
 	for range shortPartMaxAttempts {
 		short := s.generateShortPart()
@@ -44,7 +43,9 @@ func (s *shortener) GetShortURLPart(orig string) (string, error) {
 	return "", errors.New("попытки сгенерировать короткую часть исчерпаны")
 }
 
-// Сгенерировать короткую часть.
+// generateShortPart формирует короткую ссылку.
+// Длина ссылки задается [shortPartyLength].
+// Допустимые символы хранятся в [symbols].
 func (s *shortener) generateShortPart() string {
 	var short [shortPartLength]rune
 	sym := []rune(symbols)
@@ -55,8 +56,8 @@ func (s *shortener) generateShortPart() string {
 	return string(short[:])
 }
 
-// Конструктор сервиса коротких url.
-func NewShortener(r repository.Repository) Shortener {
+// NewShortener конструктор для [shortener].
+func NewShortener(r Repository) *shortener {
 	return &shortener{
 		repo: r,
 	}

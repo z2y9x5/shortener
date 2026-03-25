@@ -2,46 +2,51 @@ package config
 
 import (
 	"flag"
+	"os"
 )
 
-// Значения по умолчанию.
 const (
-	defaultServerAddr = "localhost:8080"
-	defaultBaseURL    = "http://" + defaultServerAddr
+	defaultServerAddr = "localhost:8080"              // Прослушиваемый сервером адрес и порт.
+	defaultBaseURL    = "http://" + defaultServerAddr // Базовый URL для короткой ссылки.
+	defaultURLFile    = "urls.json"                   // Файловое хранилище данных.
 )
 
-// Интерфейс конфигурации.
-type Config interface {
-	GetAppConfig() app
-	ApplyCLIArgs()
-}
+// cnf - общий для приложения экземпляр конфигурации.
+// Доступен через вызов [GetConfig].
+var cnf *Config
 
-// Конфигурация приложения.
-type app struct {
+// Config хранит конфигурацию приложения.
+type Config struct {
 	ServerAddr string
 	BaseURL    string
+	URLFile    string
 }
 
-// Конфигурация.
-type config struct {
-	App app
-}
-
-// Вернуть конфигурацию приложения.
-func (c *config) GetAppConfig() app {
-	return c.App
-}
-
-// Применить значения из аргументов командной строки.
-func (c *config) ApplyCLIArgs() {
-	flag.StringVar(&c.App.ServerAddr, "a", defaultServerAddr, "Адрес сервера в формате хост:порт. Пример: "+defaultServerAddr)
-	flag.StringVar(&c.App.BaseURL, "b", defaultBaseURL, "Базовый URL для ссылок. Пример: "+defaultBaseURL)
+// ApplyCLIArgs меняет значения в [Config] на значения из флагов командной строки.
+func (c *Config) ApplyCLIArgs() {
+	flag.StringVar(&c.ServerAddr, "a", defaultServerAddr, "Адрес сервера в формате хост:порт. Пример: "+defaultServerAddr)
+	flag.StringVar(&c.BaseURL, "b", defaultBaseURL, "Базовый URL для ссылок. Пример: "+defaultBaseURL)
+	flag.StringVar(&c.URLFile, "f", defaultURLFile, "Файл для хранения ссылок. Пример: "+defaultURLFile)
 	flag.Parse()
-	c.deleteLastSlash(&c.App.BaseURL)
+	c.deleteLastSlash(&c.BaseURL)
 }
 
-// Удалить слеш в конце строки.
-func (c *config) deleteLastSlash(url *string) {
+// ApplyEnvArgs меняет значения в [Config] на значения из переменных окружения.
+func (c *Config) ApplyEnvArgs() {
+	if val := os.Getenv("SERVER_ADDRESS"); val != "" {
+		c.ServerAddr = val
+	}
+	if val := os.Getenv("BASE_URL"); val != "" {
+		c.BaseURL = val
+		c.deleteLastSlash(&c.BaseURL)
+	}
+	if val := os.Getenv("FILE_STORAGE_PATH"); val != "" {
+		c.URLFile = val
+	}
+}
+
+// deleteLastSlash удаляет слеш в конце адреса [Config.BaseURL].
+func (c *Config) deleteLastSlash(url *string) {
 	runes := []rune(*url)
 	len := len(runes)
 	if len > 0 && runes[len-1] == '/' {
@@ -49,12 +54,14 @@ func (c *config) deleteLastSlash(url *string) {
 	}
 }
 
-// Конструктор конфигурации.
-func NewConfig() Config {
-	return &config{
-		App: app{
+// GetConfig возвращает экземпляр конфигурации.
+func GetConfig() *Config {
+	if cnf == nil {
+		return &Config{
 			ServerAddr: defaultServerAddr,
 			BaseURL:    defaultBaseURL,
-		},
+			URLFile:    defaultURLFile,
+		}
 	}
+	return cnf
 }
