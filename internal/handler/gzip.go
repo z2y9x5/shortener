@@ -31,12 +31,11 @@ func (c *compressWriter) Write(p []byte) (int, error) {
 
 // WriteHeader - обертка для [http.ResponseWriter.WriteHeader].
 func (c *compressWriter) WriteHeader(statusCode int) {
-	if !isCompressibleType(c.w.Header().Get("Content-Type")) {
+	if isCompressibleType(c.w.Header().Get("Content-Type")) {
+		c.w.Header().Set("Content-Encoding", "gzip")
+	} else {
 		c.w.Header().Del("Content-Encoding")
-		c.w.WriteHeader(statusCode)
-		return
 	}
-	c.w.Header().Set("Content-Encoding", "gzip")
 	c.w.WriteHeader(statusCode)
 }
 
@@ -91,12 +90,11 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 // isCompressibleType проверяет "Content-Type".
 // Сжимаемые типы: "application/json", "text/html".
 func isCompressibleType(contentType string) bool {
-	switch contentType {
-	case "application/json", "text/html":
+	if strings.HasPrefix(contentType, "application/json") ||
+		strings.HasPrefix(contentType, "text/html") {
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 // GzipMiddleware поддерживает сжатые запросы с заголовком "Content-Encoding: gzip"

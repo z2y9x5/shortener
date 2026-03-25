@@ -32,10 +32,8 @@ func (l *loggingResponseWriter) Header() http.Header {
 
 // Write - обертка для [http.ResponseWriter.Write].
 func (l *loggingResponseWriter) Write(p []byte) (int, error) {
-	l.respData.body.Write(p)
-	count, err := l.w.Write(p)
-	l.respData.size = count
-	return count, err
+	l.respData.size, _ = l.respData.body.Write(p)
+	return l.w.Write(p)
 }
 
 // WriteHeader - обертка для [http.ResponseWriter.WriteHeader].
