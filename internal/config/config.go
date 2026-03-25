@@ -8,6 +8,7 @@ import (
 const (
 	defaultServerAddr = "localhost:8080"              // Прослушиваемый сервером адрес и порт.
 	defaultBaseURL    = "http://" + defaultServerAddr // Базовый URL для короткой ссылки.
+	defaultURLFile    = "urls.json"                   // Файловое хранилище данных.
 )
 
 // cnf - общий для приложения экземпляр конфигурации.
@@ -18,12 +19,14 @@ var cnf *Config
 type Config struct {
 	ServerAddr string
 	BaseURL    string
+	URLFile    string
 }
 
 // ApplyCLIArgs меняет значения в [Config] на значения из флагов командной строки.
 func (c *Config) ApplyCLIArgs() {
 	flag.StringVar(&c.ServerAddr, "a", defaultServerAddr, "Адрес сервера в формате хост:порт. Пример: "+defaultServerAddr)
 	flag.StringVar(&c.BaseURL, "b", defaultBaseURL, "Базовый URL для ссылок. Пример: "+defaultBaseURL)
+	flag.StringVar(&c.URLFile, "f", defaultURLFile, "Файл для хранения ссылок. Пример: "+defaultURLFile)
 	flag.Parse()
 	c.deleteLastSlash(&c.BaseURL)
 }
@@ -36,6 +39,9 @@ func (c *Config) ApplyEnvArgs() {
 	if val := os.Getenv("BASE_URL"); val != "" {
 		c.BaseURL = val
 		c.deleteLastSlash(&c.BaseURL)
+	}
+	if val := os.Getenv("FILE_STORAGE_PATH"); val != "" {
+		c.URLFile = val
 	}
 }
 
@@ -54,6 +60,7 @@ func GetConfig() *Config {
 		return &Config{
 			ServerAddr: defaultServerAddr,
 			BaseURL:    defaultBaseURL,
+			URLFile:    defaultURLFile,
 		}
 	}
 	return cnf

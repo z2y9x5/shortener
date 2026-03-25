@@ -9,3 +9,10 @@ type JSONRequest struct {
 type JSONResponse struct {
 	Result string `json:"result"`
 }
+
+// FileRecord описывает поля записи в файле.
+type FileRecord struct {
+	Uuid        string `json:"uuid"`
+	ShortUrl    string `json:"short_url"`
+	OriginalUrl string `json:"original_url"`
+}
